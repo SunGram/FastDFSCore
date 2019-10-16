@@ -231,6 +231,25 @@ namespace FastDFSCore.Client
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <param name="fileId"></param>
+        /// <param name="contentBytes"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public async Task<string> ModifyFileAsync(string groupName, string fileId, byte[] contentBytes, long offset)
+        {
+            var queryUpdateRequest = new QueryUpdateRequest(groupName, fileId);
+            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest);
+            var storageNode = new StorageNode(queryUpdateResponse.GroupName, queryUpdateResponse.IPAddress, queryUpdateResponse.Port, 0);
+
+            var request = new ModifyFileRequest(fileId, contentBytes, offset);
+            var response = await _executer.Execute(request, storageNode.EndPoint);
+            return response.FileId;
+        }
+
+        /// <summary>
         /// 删除文件
         /// </summary>
         /// <param name="groupName">组名</param>

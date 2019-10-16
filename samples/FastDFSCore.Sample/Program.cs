@@ -45,7 +45,7 @@ namespace FastDFSCore.Sample
             //GroupInfoAsync().Wait();
             //StorageInfoAsync().Wait();
             //DownloadToPath().Wait();
-
+            //ModifyAsync().Wait();
 
             Console.ReadLine();
         }
@@ -89,7 +89,84 @@ namespace FastDFSCore.Sample
             //await BatchUploadTest().ConfigureAwait(false);
             await BatchCustomDownloadTest().ConfigureAwait(false);
         }
+        /// <summary>
+        /// 修改文件
+        /// </summary>
+        /// <returns></returns>
+        public static async Task ModifyAsync()
+        {
+            var fileId = await UploadAppenderFileSamplePartAsync();
+            await ModifyFileSampleAsync(fileId);
+        }
+        /// <summary>
+        /// 上传单个文件部分字节
+        /// </summary>
+        public static async Task<string> UploadAppenderFileSamplePartAsync()
+        {
+            try
+            {
+                var storageNode = await _fdfsClinet.GetStorageNodeAsync("group2");
+                var filename = @"d:\1.jpg";
+                //-------------批量上传测试---------
+                //FileId:M00/02/BB/wKgABl0AkCeAbAdaAG04UC5fN08906.exe
+                //FileId:M00/02/BB/wKgABl0AkfAAAAABAH8oAOpc-Jk809.iso
+                //@"D:\Pictures\1.jpg";
 
+                var bytes = await File.ReadAllBytesAsync(filename);
+
+                var flen = 10000;
+                var fbytes = new byte[flen];
+
+                for (int i = 0; i < flen; i++)
+                {
+                    fbytes[i] = bytes[i];
+                }
+
+
+                var fileId = await _fdfsClinet.UploadAppenderFileAsync(storageNode, fbytes, "jpg").ConfigureAwait(false);
+
+                return fileId;// Console.WriteLine("上传文件位置:{0},路径:{1}", filename, fileId);
+            }
+            catch (Exception ex)
+            {
+                throw (ex);
+            }
+        }
+        /// <summary>
+        /// 修改指定fileid文件
+        /// </summary>
+        public static async Task ModifyFileSampleAsync(string fileId)
+        {
+            try
+            {
+                var storageNode = await _fdfsClinet.GetStorageNodeAsync("group2");
+                var filename = @"d:\1.jpg";
+                //-------------批量上传测试---------
+                //FileId:M00/02/BB/wKgABl0AkCeAbAdaAG04UC5fN08906.exe
+                //FileId:M00/02/BB/wKgABl0AkfAAAAABAH8oAOpc-Jk809.iso
+                //@"D:\Pictures\1.jpg";
+
+                var bytes = await File.ReadAllBytesAsync(filename);
+
+                var flen = 10000;
+                var lbytes = new byte[bytes.Length - flen];
+
+                for (int i = 0; i < (bytes.Length - flen); i++)
+                {
+                    lbytes[i] = bytes[flen + i];
+                }
+
+                //var fileId = "M00/00/06/ooYBAF2lsnuEX9EBAAAAAADYRfg203.jpg";
+
+                var data = await _fdfsClinet.ModifyFileAsync("group2", fileId, lbytes, flen);
+
+                Console.WriteLine("上传文件位置:{0},路径:{1}", filename, fileId);
+            }
+            catch (Exception ex)
+            {
+                var a = ex.Message;
+            }
+        }
         /// <summary>上传单个文件
         /// </summary>
         public static async Task UploadFileSample()

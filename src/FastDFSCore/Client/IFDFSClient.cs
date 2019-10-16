@@ -123,6 +123,16 @@ namespace FastDFSCore.Client
         Task<string> AppendFileAsync(string groupName, string fileId, byte[] contentBytes);
 
         /// <summary>
+        /// 修改文件
+        /// </summary>
+        /// <param name="groupName">组名</param>
+        /// <param name="fileId">文件名</param>
+        /// <param name="contentBytes">文件内容</param>
+        /// <param name="offset"></param>
+        /// <returns>文件名</returns>
+        Task<string> ModifyFileAsync(string groupName, string fileId, byte[] contentBytes, long offset);
+
+        /// <summary>
         /// 删除文件
         /// </summary>
         /// <param name="groupName">组名</param>
