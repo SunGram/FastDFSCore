@@ -41,11 +41,13 @@ namespace FastDFSCore.Sample
             _fdfsClinet = _provider.GetService<IFDFSClient>();
             _downloaderFactory = _provider.GetService<IDownloaderFactory>();
 
-            RunAsync().Wait();
+            //RunAsync().Wait();
             //GroupInfoAsync().Wait();
             //StorageInfoAsync().Wait();
             //DownloadToPath().Wait();
             //ModifyAsync().Wait();
+
+            SlaveProcess().Wait();
 
             Console.ReadLine();
         }
@@ -98,6 +100,74 @@ namespace FastDFSCore.Sample
             var fileId = await UploadAppenderFileSamplePartAsync();
             await ModifyFileSampleAsync(fileId);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static async Task SlaveProcess() 
+        {
+            var fileId = await UploadFileSampleAsync();
+            var slavefileid = await UploadSlaveAsync(fileId);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="masterId"></param>
+        /// <returns></returns>
+        public static async Task<string> UploadSlaveAsync(string masterId) 
+        {
+            try
+            {
+                //var storageNode = await _fdfsClinet.GetStorageNodeAsync("group2");
+                // var filename = @"D:\software\SQL\2cac2a50a5db6ccb759df9cf7d98948d055a76d9.png";
+                //-------------批量上传测试---------
+                //FileId:M00/02/BB/wKgABl0AkCeAbAdaAG04UC5fN08906.exe
+                //FileId:M00/02/BB/wKgABl0AkfAAAAABAH8oAOpc-Jk809.iso
+                //@"D:\Pictures\1.jpg";
+
+                var text = "762830abdcefghijklmnopqrstuvwxyz0991822-";
+
+                var bytes = System.Text.Encoding.Default.GetBytes(text);
+
+                var fileId = await _fdfsClinet.UploadSlaveFileAsync("group2", masterId, "120_120", bytes, "txt")
+                    .ConfigureAwait(false);
+
+                return fileId;// Console.WriteLine("上传文件位置:{0},路径:{1}", filename, fileId);
+            }
+            catch (Exception ex)
+            {
+                throw (ex);
+            }
+        }
+
+        /// <summary>
+        /// 上传单个文件部分字节
+        /// </summary>
+        public static async Task<string> UploadFileSampleAsync()
+        {
+            try
+            {
+                var storageNode = await _fdfsClinet.GetStorageNodeAsync("group2");
+                var filename = @"C:\Users\Yihua_IT\Desktop\Proxy\SSR\Shadowsocks.exe";
+                //-------------批量上传测试---------
+                //FileId:M00/02/BB/wKgABl0AkCeAbAdaAG04UC5fN08906.exe
+                //FileId:M00/02/BB/wKgABl0AkfAAAAABAH8oAOpc-Jk809.iso
+                //@"D:\Pictures\1.jpg";
+
+                var bytes = await File.ReadAllBytesAsync(filename);
+
+                var fileId = await _fdfsClinet.UploadAppenderFileAsync(storageNode, bytes, "exe")
+                    .ConfigureAwait(false);
+
+                return fileId;// Console.WriteLine("上传文件位置:{0},路径:{1}", filename, fileId);
+            }
+            catch (Exception ex)
+            {
+                throw (ex);
+            }
+        }
         /// <summary>
         /// 上传单个文件部分字节
         /// </summary>
@@ -106,7 +176,7 @@ namespace FastDFSCore.Sample
             try
             {
                 var storageNode = await _fdfsClinet.GetStorageNodeAsync("group2");
-                var filename = @"d:\1.jpg";
+                var filename = @"C:\Users\Yihua_IT\Desktop\Proxy\SSR\Shadowsocks.exe";
                 //-------------批量上传测试---------
                 //FileId:M00/02/BB/wKgABl0AkCeAbAdaAG04UC5fN08906.exe
                 //FileId:M00/02/BB/wKgABl0AkfAAAAABAH8oAOpc-Jk809.iso
@@ -123,7 +193,7 @@ namespace FastDFSCore.Sample
                 }
 
 
-                var fileId = await _fdfsClinet.UploadAppenderFileAsync(storageNode, fbytes, "jpg").ConfigureAwait(false);
+                var fileId = await _fdfsClinet.UploadAppenderFileAsync(storageNode, fbytes, "exe").ConfigureAwait(false);
 
                 return fileId;// Console.WriteLine("上传文件位置:{0},路径:{1}", filename, fileId);
             }
@@ -140,7 +210,7 @@ namespace FastDFSCore.Sample
             try
             {
                 var storageNode = await _fdfsClinet.GetStorageNodeAsync("group2");
-                var filename = @"d:\1.jpg";
+                var filename = @"C:\Users\Yihua_IT\Desktop\Proxy\SSR\Shadowsocks.exe";
                 //-------------批量上传测试---------
                 //FileId:M00/02/BB/wKgABl0AkCeAbAdaAG04UC5fN08906.exe
                 //FileId:M00/02/BB/wKgABl0AkfAAAAABAH8oAOpc-Jk809.iso
@@ -148,7 +218,7 @@ namespace FastDFSCore.Sample
 
                 var bytes = await File.ReadAllBytesAsync(filename);
 
-                var flen = 10000;
+                var flen = 900;//10000;
                 var lbytes = new byte[bytes.Length - flen];
 
                 for (int i = 0; i < (bytes.Length - flen); i++)
