@@ -75,6 +75,15 @@ namespace FastDFSCore.Client
         /// <returns></returns>
         Task<string> UploadFileAsync(StorageNode storageNode, string filename);
 
+        /// <summary>   
+        /// 上传文件
+        /// </summary>
+        /// <param name="storageNode">GetStorageNode方法返回的存储节点</param>
+        /// <param name="filename">上传文件文件名</param>
+        /// <param name="fileExt"></param>
+        /// <returns></returns>
+        Task<string> UploadFileAsync(StorageNode storageNode, string filename, string fileExt);
+
         /// <summary>
         /// 上传从文件
         /// </summary>
@@ -109,6 +118,15 @@ namespace FastDFSCore.Client
         /// 上传可以Append的文件
         /// </summary>
         /// <param name="storageNode">GetStorageNode方法返回的存储节点</param>
+        /// <param name="stream"></param>
+        /// <param name="fileExt">文件扩展名(注意:不包含".")</param>
+        /// <returns>文件名</returns>
+        Task<string> UploadAppenderFileAsync(StorageNode storageNode, Stream stream, string fileExt);
+
+        /// <summary>
+        /// 上传可以Append的文件
+        /// </summary>
+        /// <param name="storageNode">GetStorageNode方法返回的存储节点</param>
         /// <param name="filename">本地文件名</param>
         /// <returns>文件名</returns>
         Task<string> UploadAppenderFileAsync(StorageNode storageNode, string filename);
@@ -123,7 +141,16 @@ namespace FastDFSCore.Client
         Task<string> AppendFileAsync(string groupName, string fileId, byte[] contentBytes);
 
         /// <summary>
-        /// 修改文件
+        /// 附加文件
+        /// </summary>
+        /// <param name="groupName">组名</param>
+        /// <param name="fileId">文件名</param>
+        /// <param name="stream"></param>
+        /// <returns>文件名</returns>
+        Task<string> AppendFileAsync(string groupName, string fileId, Stream stream);
+
+        /// <summary>
+        /// 附加文件
         /// </summary>
         /// <param name="groupName">组名</param>
         /// <param name="fileId">文件名</param>
@@ -131,6 +158,16 @@ namespace FastDFSCore.Client
         /// <param name="offset"></param>
         /// <returns>文件名</returns>
         Task<string> ModifyFileAsync(string groupName, string fileId, byte[] contentBytes, long offset);
+
+        /// <summary>
+        /// 附加文件
+        /// </summary>
+        /// <param name="groupName">组名</param>
+        /// <param name="fileId">文件名</param>
+        /// <param name="stream"></param>
+        /// <param name="offset"></param>
+        /// <returns>文件名</returns>
+        Task<string> ModifyFileAsync(string groupName, string fileId, Stream stream, long offset);
 
         /// <summary>
         /// 删除文件
@@ -156,6 +193,17 @@ namespace FastDFSCore.Client
         /// <param name="length">要读取的字节数</param>
         /// <returns>文件内容</returns>
         Task<byte[]> DownloadFileAsync(StorageNode storageNode, string fileId, long offset, long length);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <param name="fileId"></param>
+        /// <param name="offset"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        Task<byte[]> DownloadFileAsync(string groupName, string fileId, long offset, long length);
+
 
         /// <summary>
         /// 下载文件到指定的地点
@@ -197,9 +245,9 @@ namespace FastDFSCore.Client
         /// <param name="storageNode">GetStorageNode方法返回的存储节点</param>
         /// <param name="fileId"></param>
         /// <param name="metaData">MetaData数据</param>
-        /// <param name="option"></param>
+        /// <param name="mOption"></param>
         /// <returns></returns>
-        Task SetMetaData(StorageNode storageNode, string fileId, IDictionary<string, string> metaData, MetaDataOption option = MetaDataOption.Overwrite);
+        Task SetMetaData(StorageNode storageNode, string fileId, IDictionary<string, string> metaData, MetaDataOption mOption = MetaDataOption.Overwrite);
 
     }
 }

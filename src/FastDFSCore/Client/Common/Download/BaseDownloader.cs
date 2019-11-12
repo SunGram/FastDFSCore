@@ -23,10 +23,10 @@ namespace FastDFSCore.Client
 
         /// <summary>Ctor
         /// </summary>
-        public BaseDownloader(ILoggerFactory loggerFactory, FDFSOption option)
+        public BaseDownloader(FDFSOption option)
         {
             Option = option;
-            Logger = loggerFactory.CreateLogger(option.LoggerName);
+            Logger = InternalLoggerFactory.DefaultFactory.CreateLogger(option.LoggerName);
         }
 
 

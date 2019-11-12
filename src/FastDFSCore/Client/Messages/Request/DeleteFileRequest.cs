@@ -26,6 +26,12 @@ namespace FastDFSCore.Client
         /// </summary>
         public string FileId { get; set; }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override int Timeout { get; set; } = 10000;
+
         /// <summary>Ctor
         /// </summary>
         public DeleteFileRequest()

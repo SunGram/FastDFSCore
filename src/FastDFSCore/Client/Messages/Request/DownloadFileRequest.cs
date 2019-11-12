@@ -36,6 +36,12 @@ namespace FastDFSCore.Client
         /// </summary>
         public string FileId { get; set; }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override int Timeout { get; set; } = 20000;
+
         /// <summary>Ctor
         /// </summary>
         public DownloadFileRequest()
@@ -80,8 +86,5 @@ namespace FastDFSCore.Client
             Header = new FDFSHeader(length, Consts.STORAGE_PROTO_CMD_DOWNLOAD_FILE, 0);
             return bodyBuffer.ToArray();
         }
-
-
-
     }
 }

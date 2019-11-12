@@ -10,7 +10,7 @@ namespace FastDFSCore.Client
     {
         /// <summary>Tracker的地址
         /// </summary>
-        public List<IPEndPoint> Trackers { get; set; } = new List<IPEndPoint>();
+        public List<IPEndPoint> Trackers { get; } = new List<IPEndPoint>();
 
         /// <summary>连接超时时间,5s
         /// </summary>

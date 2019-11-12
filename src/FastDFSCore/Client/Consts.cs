@@ -4,9 +4,12 @@ namespace FastDFSCore.Client
 {
     /// <summary>常量
     /// </summary>
-    public class Consts
+    public static class Consts
     {
-        /// <summary>扩展名最大长度, fastdfs源码中: common/fdfs_global.h 
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+                              
+        /// <summary>
+        /// 扩展名最大长度, fastdfs源码中: common/fdfs_global.h 
         /// </summary>
         public const byte FDFS_FILE_EXT_NAME_MAX_LEN = 6; //扩展名最大长度  // common/fdfs_global.h 
 
@@ -150,6 +153,8 @@ namespace FastDFSCore.Client
         /// <summary>METADATA_PAIR_SEPARATER
         /// </summary>
         public const byte METADATA_PAIR_SEPARATER = 0x01;
+#pragma warning restore CA1707 // Identifiers should not contain underscores
+
     }
 
     /// <summary>MetaData选项

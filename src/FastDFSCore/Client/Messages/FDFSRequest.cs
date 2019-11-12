@@ -29,6 +29,11 @@ namespace FastDFSCore.Client
         /// <summary>对当前body进行编码
         /// </summary>
         public abstract byte[] EncodeBody(FDFSOption option);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual int Timeout { get; set; } = 2000;
     }
 
     /// <summary>FDFSRequest, <seealso cref="FastDFSCore.Client.FDFSRequest"/>

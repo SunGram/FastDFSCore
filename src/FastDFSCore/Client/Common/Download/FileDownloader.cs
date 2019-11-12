@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System.IO;
+﻿using System.IO;
 
 namespace FastDFSCore.Client
 {
@@ -12,7 +11,7 @@ namespace FastDFSCore.Client
 
         /// <summary>Ctor
         /// </summary>
-        public FileDownloader(ILoggerFactory loggerFactory, FDFSOption option, string savePath) : base(loggerFactory, option)
+        public FileDownloader(FDFSOption option, string savePath) : base(option)
         {
             SavePath = savePath;
         }

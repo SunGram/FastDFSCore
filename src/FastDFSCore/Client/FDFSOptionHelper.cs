@@ -16,7 +16,9 @@ namespace FastDFSCore.Client
         {
             if (!File.Exists(file))
             {
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 throw new ArgumentException("配置文件不存在");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
             var option = new FDFSOption();
             var doc = new XmlDocument();
@@ -29,6 +31,8 @@ namespace FastDFSCore.Client
             XmlNode root = doc.SelectSingleNode("FDFSClient");
 
             var allTrackers = root.SelectSingleNode("Trackers");
+
+#pragma warning disable CA1305
             //全部的Tracker节点
             var trackerNodes = allTrackers.SelectNodes("Tracker");
             foreach (XmlNode trackerNode in trackerNodes)
@@ -44,7 +48,7 @@ namespace FastDFSCore.Client
             //ConnectionLifeTime
             option.ConnectionLifeTime = int.Parse(root.SelectSingleNode("ConnectionLifeTime").InnerText);
             //ScanTimeoutConnectionInterval
-            option.ScanTimeoutConnectionInterval= int.Parse(root.SelectSingleNode("ScanTimeoutConnectionInterval").InnerText);
+            option.ScanTimeoutConnectionInterval = int.Parse(root.SelectSingleNode("ScanTimeoutConnectionInterval").InnerText);
 
             //TrackerMaxConnection
             option.TrackerMaxConnection = int.Parse(root.SelectSingleNode("TrackerMaxConnection").InnerText);
@@ -63,12 +67,13 @@ namespace FastDFSCore.Client
             option.TcpSetting.CloseTimeoutSeconds = int.Parse(tcpNode.SelectSingleNode("CloseTimeoutSeconds").InnerText);
             //高水位
             option.TcpSetting.WriteBufferHighWaterMark = int.Parse(tcpNode.SelectSingleNode("WriteBufferHighWaterMark").InnerText);
-            //低水位
-            option.TcpSetting.WriteBufferLowWaterMark = int.Parse(tcpNode.SelectSingleNode("WriteBufferLowWaterMark").InnerText);
             //接收socket缓存大小
+            // Specify IFormatProvider
             option.TcpSetting.SoRcvbuf = int.Parse(tcpNode.SelectSingleNode("SoRcvbuf").InnerText);
             //发送socket缓存大小
             option.TcpSetting.SoSndbuf = int.Parse(tcpNode.SelectSingleNode("SoSndbuf").InnerText);
+#pragma warning restore CA1305 // Specify IFormatProvider
+
             //Tcp无延迟发送
             option.TcpSetting.TcpNodelay = bool.Parse(tcpNode.SelectSingleNode("TcpNodelay").InnerText);
             //重用端口号
@@ -79,11 +84,22 @@ namespace FastDFSCore.Client
             return option;
         }
 
+        private static int ParseInt(string value)
+        {
+#pragma warning disable CA1305 // Specify IFormatProvider
+            return int.Parse(value);
+#pragma warning restore CA1305 // Specify IFormatProvider
+        }
 
         /// <summary>将配置文件转换成xml字符串
         /// </summary>
         public static string ToXml(FDFSOption option)
         {
+            if (option == null)
+            {
+                throw new ArgumentNullException(nameof(option));
+            }
+
             try
             {
                 StringBuilder sb = new StringBuilder();

@@ -1,5 +1,4 @@
 ﻿using DotNetty.Buffers;
-using System;
 
 namespace FastDFSCore.Client
 {
@@ -15,6 +14,11 @@ namespace FastDFSCore.Client
         /// <summary>头部
         /// </summary>
         public FDFSHeader Header { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsHeaderException { get; set; }
 
         /// <summary>返回的数据
         /// </summary>
@@ -45,7 +49,8 @@ namespace FastDFSCore.Client
             Header = new FDFSHeader(buffer.ReadLong(), buffer.ReadByte(), buffer.ReadByte());
             if (Header.Status != 0)
             {
-                throw new Exception($"返回Status不正确:{Header.Status}");
+                IsHeaderException = true;
+                return;
             }
 
             Body = new byte[Header.Length];

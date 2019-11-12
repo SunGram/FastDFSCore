@@ -39,7 +39,7 @@ namespace FastDFSCore.Client
         /// <summary>
         ///     Create a frame out of the <see cref="IByteBuffer" /> and return it.
         /// </summary>
-        /// <param name="context">
+        /// <param name="context">  
         ///     The <see cref="IChannelHandlerContext" /> which this <see cref="ByteToMessageDecoder" /> belongs
         ///     to.
         /// </param>

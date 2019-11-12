@@ -35,7 +35,10 @@ namespace FastDFSCore.Client
         /// </summary>
         public override void LoadContent(FDFSOption option, byte[] data)
         {
-
+            if (data.Length == 0)
+            {
+                return;
+            }
         }
     }
 }

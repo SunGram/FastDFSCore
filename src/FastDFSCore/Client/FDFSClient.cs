@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,7 +30,7 @@ namespace FastDFSCore.Client
         public async Task<StorageNode> GetStorageNodeAsync(string groupName)
         {
             var request = new QueryStoreWithGroupOneRequest(groupName);
-            var response = await _executer.Execute(request);
+            var response = await _executer.Execute(request).ConfigureAwait(false);
             var storageNode = new StorageNode(response.GroupName, response.IPAddress, response.Port, response.StorePathIndex);
             return storageNode;
         }
@@ -41,7 +42,7 @@ namespace FastDFSCore.Client
         public async Task<GroupInfo> ListOneGroupInfoAsync(string groupName)
         {
             var request = new ListOneGroupRequest(groupName);
-            var response = await _executer.Execute(request);
+            var response = await _executer.Execute(request).ConfigureAwait(false);
             return response.GroupInfo;
         }
 
@@ -50,7 +51,7 @@ namespace FastDFSCore.Client
         public async Task<List<GroupInfo>> ListAllGroupInfosAsync()
         {
             var request = new ListAllGroupRequest();
-            var response = await _executer.Execute(request);
+            var response = await _executer.Execute(request).ConfigureAwait(false);
             return response.GroupInfos;
         }
 
@@ -61,7 +62,7 @@ namespace FastDFSCore.Client
         public async Task<List<StorageInfo>> ListStorageInfosAsync(string groupName)
         {
             var request = new ListStorageRequest(groupName);
-            var response = await _executer.Execute(request);
+            var response = await _executer.Execute(request).ConfigureAwait(false);
             return response.StorageInfos;
         }
 
@@ -75,7 +76,7 @@ namespace FastDFSCore.Client
         public async Task<StorageNode> QueryStorageNodeForFileAsync(string groupName, string fileId)
         {
             var request = new QueryFetchOneRequest(groupName, fileId);
-            var response = await _executer.Execute(request);
+            var response = await _executer.Execute(request).ConfigureAwait(false);
             var storageNode = new StorageNode(response.GroupName, response.IPAddress, response.Port, 0);
             return storageNode;
         }
@@ -89,7 +90,7 @@ namespace FastDFSCore.Client
         public async Task<List<StorageNode>> QueryStorageNodesForFileAsync(string groupName, string fileId)
         {
             var request = new QueryFetchAllRequest(groupName, fileId);
-            var response = await _executer.Execute(request);
+            var response = await _executer.Execute(request).ConfigureAwait(false);
             var storageNodes = response.IPAddresses.Select(x => new StorageNode(response.GroupName, x, response.Port, 0));
             return storageNodes.ToList();
         }
@@ -104,8 +105,12 @@ namespace FastDFSCore.Client
         public async Task<string> UploadFileAsync(StorageNode storageNode, byte[] contentByte, string fileExt)
         {
             fileExt = Util.ParseExtWithOut(fileExt);
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
             var request = new UploadFileRequest(storageNode.StorePathIndex, fileExt, contentByte);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
 
@@ -119,8 +124,12 @@ namespace FastDFSCore.Client
         public async Task<string> UploadFileAsync(StorageNode storageNode, Stream stream, string fileExt)
         {
             fileExt = Util.ParseExtWithOut(fileExt);
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
             var request = new UploadFileRequest(storageNode.StorePathIndex, fileExt, stream);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
 
@@ -132,13 +141,46 @@ namespace FastDFSCore.Client
         /// <returns></returns>
         public async Task<string> UploadFileAsync(StorageNode storageNode, string filename)
         {
-            string fileExt = Path.GetExtension(filename).Substring(1);
+            string fileExt = Path.GetExtension(filename);
+            if (!string.IsNullOrEmpty(fileExt))
+            {
+                fileExt = fileExt.Substring(1);
+            }
+
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
             var fs = new FileStream(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
             var request = new UploadFileRequest(storageNode.StorePathIndex, fileExt, fs);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
+        /// <summary>
+        /// 上传文件
+        /// </summary>
+        /// <param name="storageNode">GetStorageNode方法返回的存储节点</param>
+        /// <param name="filename">上传文件文件名</param>
+        /// <param name="fileExt"></param>
+        /// <returns></returns>
+        public async Task<string> UploadFileAsync(StorageNode storageNode, string filename, string fileExt)
+        {
+            if (!string.IsNullOrEmpty(fileExt))
+            {
+                fileExt = Path.GetExtension(filename).Substring(1);
+            }
 
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
+            var fs = new FileStream(filename, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            var request = new UploadFileRequest(storageNode.StorePathIndex, fileExt, fs);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
+            return response.FileId;
+        }
         /// <summary>
         /// 上传从文件
         /// </summary>
@@ -152,11 +194,11 @@ namespace FastDFSCore.Client
         {
             fileExt = Util.ParseExtWithOut(fileExt);
             var queryUpdateRequest = new QueryUpdateRequest(groupName, masterFileId);
-            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest);
+            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest).ConfigureAwait(false);
             var storageNode = new StorageNode(queryUpdateResponse.GroupName, queryUpdateResponse.IPAddress, queryUpdateResponse.Port, 0);
 
             var request = new UploadSlaveFileRequest(masterFileId, prefixName, fileExt, contentBytes);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
 
@@ -171,13 +213,13 @@ namespace FastDFSCore.Client
         public async Task<string> UploadSlaveFileAsync(string groupName, string masterFileId, string prefixName, string filename)
         {
             var queryUpdateRequest = new QueryUpdateRequest(groupName, masterFileId);
-            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest);
+            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest).ConfigureAwait(false);
             var storageNode = new StorageNode(queryUpdateResponse.GroupName, queryUpdateResponse.IPAddress, queryUpdateResponse.Port, 0);
 
             string extension = Path.GetExtension(filename).Substring(1);
             var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
             var request = new UploadSlaveFileRequest(masterFileId, prefixName, extension, fs);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
 
@@ -190,9 +232,33 @@ namespace FastDFSCore.Client
         /// <returns>文件名</returns>
         public async Task<string> UploadAppenderFileAsync(StorageNode storageNode, byte[] contentBytes, string fileExt)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
             fileExt = Util.ParseExtWithOut(fileExt);
             var request = new UploadAppendFileRequest(storageNode.StorePathIndex, fileExt, contentBytes);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
+            return response.FileId;
+        }
+
+
+        /// <summary>
+        /// 上传可以Append的文件
+        /// </summary>
+        /// <param name="storageNode">GetStorageNode方法返回的存储节点</param>
+        /// <param name="stream"></param>
+        /// <param name="fileExt">文件扩展名(注意:不包含".")</param>
+        /// <returns>文件名</returns>
+        public async Task<string> UploadAppenderFileAsync(StorageNode storageNode, Stream stream, string fileExt)
+        {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+            fileExt = Util.ParseExtWithOut(fileExt);
+            var request = new UploadAppendFileRequest(storageNode.StorePathIndex, fileExt, stream);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
 
@@ -205,10 +271,15 @@ namespace FastDFSCore.Client
         /// <returns>文件名</returns>
         public async Task<string> UploadAppenderFileAsync(StorageNode storageNode, string filename)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
             string extension = Path.GetExtension(filename).Substring(1);
             var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
             var request = new UploadAppendFileRequest(storageNode.StorePathIndex, extension, fs);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
 
@@ -222,14 +293,30 @@ namespace FastDFSCore.Client
         public async Task<string> AppendFileAsync(string groupName, string fileId, byte[] contentBytes)
         {
             var queryUpdateRequest = new QueryUpdateRequest(groupName, fileId);
-            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest);
+            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest).ConfigureAwait(false);
             var storageNode = new StorageNode(queryUpdateResponse.GroupName, queryUpdateResponse.IPAddress, queryUpdateResponse.Port, 0);
 
             var request = new AppendFileRequest(fileId, contentBytes);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
+        /// <summary>
+        /// 附加文件
+        /// </summary>
+        /// <param name="groupName">组名</param>
+        /// <param name="fileId">文件名</param>
+        /// <param name="stream"></param>
+        /// <returns>文件名</returns>
+        public async Task<string> AppendFileAsync(string groupName, string fileId, Stream stream)
+        {
+            var queryUpdateRequest = new QueryUpdateRequest(groupName, fileId);
+            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest).ConfigureAwait(false);
+            var storageNode = new StorageNode(queryUpdateResponse.GroupName, queryUpdateResponse.IPAddress, queryUpdateResponse.Port, 0);
 
+            var request = new AppendFileRequest(fileId, stream);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
+            return response.FileId;
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -241,11 +328,30 @@ namespace FastDFSCore.Client
         public async Task<string> ModifyFileAsync(string groupName, string fileId, byte[] contentBytes, long offset)
         {
             var queryUpdateRequest = new QueryUpdateRequest(groupName, fileId);
-            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest);
+            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest).ConfigureAwait(false);
             var storageNode = new StorageNode(queryUpdateResponse.GroupName, queryUpdateResponse.IPAddress, queryUpdateResponse.Port, 0);
 
             var request = new ModifyFileRequest(fileId, contentBytes, offset);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
+            return response.FileId;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <param name="fileId"></param>
+        /// <param name="stream"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public async Task<string> ModifyFileAsync(string groupName, string fileId, Stream stream, long offset)
+        {
+            var queryUpdateRequest = new QueryUpdateRequest(groupName, fileId);
+            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest).ConfigureAwait(false);
+            var storageNode = new StorageNode(queryUpdateResponse.GroupName, queryUpdateResponse.IPAddress, queryUpdateResponse.Port, 0);
+
+            var request = new ModifyFileRequest(fileId, stream, offset);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.FileId;
         }
 
@@ -257,11 +363,11 @@ namespace FastDFSCore.Client
         public async Task<bool> RemoveFileAsync(string groupName, string fileId)
         {
             var queryUpdateRequest = new QueryUpdateRequest(groupName, fileId);
-            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest);
+            var queryUpdateResponse = await _executer.Execute(queryUpdateRequest).ConfigureAwait(false);
             var storageNode = new StorageNode(queryUpdateResponse.GroupName, queryUpdateResponse.IPAddress, queryUpdateResponse.Port, 0);
 
             var request = new DeleteFileRequest(groupName, fileId);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.Success;
         }
 
@@ -273,8 +379,13 @@ namespace FastDFSCore.Client
         /// <returns>文件内容</returns>
         public async Task<byte[]> DownloadFileAsync(StorageNode storageNode, string fileId)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
             var request = new DownloadFileRequest(0L, 0L, storageNode.GroupName, fileId);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.ContentBytes;
         }
 
@@ -289,8 +400,32 @@ namespace FastDFSCore.Client
         /// <returns>文件内容</returns>
         public async Task<byte[]> DownloadFileAsync(StorageNode storageNode, string fileId, long offset, long length)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
             var request = new DownloadFileRequest(offset, length, storageNode.GroupName, fileId);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
+            return response.ContentBytes;
+        }
+
+
+        /// <summary>
+        /// 增量下载文件
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <param name="fileId">文件名</param>
+        /// <param name="offset">从文件起始点的偏移量</param>
+        /// <param name="length">要读取的字节数</param>
+        /// <returns>文件内容</returns>
+        public async Task<byte[]> DownloadFileAsync(string groupName, string fileId, long offset, long length)
+        {
+            if (groupName == null)
+            {
+                throw new ArgumentNullException(nameof(groupName));
+            }
+            var request = new DownloadFileRequest(offset, length, groupName, fileId);
+            var response = await _executer.Execute(request).ConfigureAwait(false);
             return response.ContentBytes;
         }
 
@@ -303,11 +438,16 @@ namespace FastDFSCore.Client
         /// <returns></returns>
         public async Task<string> DownloadFileEx(StorageNode storageNode, string fileId, string filePath)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
             var request = new DownloadStreamFileRequest(storageNode.GroupName, fileId)
             {
                 Downloader = _downloaderFactory.CreateFileDownloader(filePath)
             };
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return filePath;
         }
 
@@ -320,11 +460,21 @@ namespace FastDFSCore.Client
         /// <returns></returns>
         public async Task<string> DownloadFileEx(StorageNode storageNode, string fileId, IDownloader downloader)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
+            if (downloader == null)
+            {
+                throw new ArgumentNullException(nameof(downloader));
+            }
+
             var request = new DownloadStreamFileRequest(storageNode.GroupName, fileId)
             {
                 Downloader = downloader
             };
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return downloader.SavePath;
         }
 
@@ -337,8 +487,13 @@ namespace FastDFSCore.Client
         /// <returns></returns>
         public async Task<FDFSFileInfo> GetFileInfo(StorageNode storageNode, string fileId)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
             var request = new QueryFileInfoRequest(storageNode.GroupName, fileId);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return new FDFSFileInfo(response.FileSize, response.CreateTime, response.Crc32);
         }
 
@@ -351,8 +506,13 @@ namespace FastDFSCore.Client
         /// <returns></returns>
         public async Task<IDictionary<string, string>> GetMetaData(StorageNode storageNode, string fileId)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
             var request = new GetMetaDataRequest(storageNode.GroupName, fileId);
-            var response = await _executer.Execute(request, storageNode.EndPoint);
+            var response = await _executer.Execute(request, storageNode.EndPoint).ConfigureAwait(false);
             return response.MetaData;
         }
 
@@ -366,8 +526,15 @@ namespace FastDFSCore.Client
         /// <returns></returns>
         public async Task SetMetaData(StorageNode storageNode, string fileId, IDictionary<string, string> metaData, MetaDataOption option = MetaDataOption.Overwrite)
         {
+            if (storageNode == null)
+            {
+                throw new ArgumentNullException(nameof(storageNode));
+            }
+
             var request = new SetMetaDataRequest(fileId, storageNode.GroupName, metaData, option);
-            var response = await _executer.Execute(request);
+            var response = await _executer.Execute(request).ConfigureAwait(false);
         }
+
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FastDFSCore.Client
@@ -27,14 +28,27 @@ namespace FastDFSCore.Client
         public async Task<T> Execute<T>(FDFSRequest<T> request, IPEndPoint endPoint = null) where T : FDFSResponse, new()
         {
             var connection = endPoint == null ? await _connectionManager.GetTrackerConnection() : await _connectionManager.GetStorageConnection(endPoint);
-            if (connection == null)
-            {
-                throw new NullReferenceException($"Can't find connection,ipaddr:[{endPoint.ToStringAddress()}] ");
-            }
             await connection.OpenAsync();
-            var response = await connection.SendRequestAsync<T>(request);
-            await connection.CloseAsync();
-            return response as T;
+
+            var task = connection.SendRequestAsync<T>(request);
+
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource())
+            {
+                var delayTask = Task.Delay(request.Timeout, timeoutCancellationTokenSource.Token);
+                if (await Task.WhenAny(task, delayTask) == task)
+                {
+                    timeoutCancellationTokenSource.Cancel();
+                    var response = await task.ConfigureAwait(false);
+                    await connection.CloseAsync();
+
+                    if (response.Header.Status != 0)
+                    {
+                        throw new Exception($"返回Status不正确:{response.Header.Status}");
+                    }
+                    return response as T;
+                }
+                throw new TimeoutException("The operation has timed out.");
+            }
         }
     }
 }

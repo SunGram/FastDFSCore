@@ -32,6 +32,10 @@ namespace FastDFSCore.Client
         /// </summary>
         public long ByteSize { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public override int Timeout { get; set; } = 10000;
 
         /// <summary>Ctor
         /// </summary>
